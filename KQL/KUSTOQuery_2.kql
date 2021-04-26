@@ -1,0 +1,36 @@
+//  events by type
+GithubEvent
+| summarize  count() by Type
+
+
+// looking at events over time
+GithubEvent
+| where CreatedAt between (datetime(2016-02-01) .. datetime(2018-09-01))
+| summarize count() by bin(CreatedAt,1d), Type
+| render timechart 
+
+
+// Anomaly detection
+GithubEvent
+| where CreatedAt between (datetime(2016-02-01) .. datetime(2018-09-01))
+| where Type == "PushEvent"
+| where Payload has 'Azure'
+| make-series PushEvents = count() default=0 on CreatedAt in range(datetime(2016-02-01),datetime(2018-09-01), 1d)
+| extend  anomalies= series_decompose_anomalies(PushEvents,2.0)
+| render anomalychart with(anomalycolumns=anomalies,title='Push Events Anomalies')
+
+
+//forecasting
+let min_t = datetime(2018-08-01);
+let max_t = datetime(2018-09-01);
+let dt = 1d;
+let horizon = 7d;
+
+
+GithubEvent
+| project CreatedAt,Type
+| where CreatedAt between (min_t .. max_t) 
+| where Type == "PushEvent"
+| make-series PushEvents = count() on CreatedAt from min_t to max_t + horizon step dt
+| extend forecast = series_decompose_forecast(PushEvents, toint(horizon/dt)) 
+| render timechart with(title="Forecasting the next week by time series decomposition")

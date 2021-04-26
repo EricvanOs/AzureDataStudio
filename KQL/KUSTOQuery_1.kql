@@ -1,0 +1,11 @@
+StormEvents 
+| where StartTime >= datetime(2007-11-01) and StartTime < datetime(2007-12-01)
+| where State == "FLORIDA"  
+| count 
+
+
+StormEvents
+| where isnotempty(EndLocation) 
+| summarize event_count=count() by EndLocation
+| top 10 by event_count
+| render columnchart
