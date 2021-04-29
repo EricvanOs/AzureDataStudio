@@ -1,0 +1,165 @@
+// Kusto is case sensitive !!
+// Count rows:
+StormEvents | count
+
+
+// project: select a subset of columns
+// where: filtering by a Boolean expression
+StormEvents
+| where StartTime > datetime(2007-02-01) and StartTime < datetime(2007-03-01)
+| where EventType == 'Flood' and State == 'CALIFORNIA'
+| project StartTime, EndTime , State , EventType , EpisodeNarrative
+
+
+// show me n rows
+StormEvents
+| take 5
+| project  StartTime, EndTime, EventType, State, EventNarrative  
+
+
+// sort and top
+StormEvents
+| top 5 by StartTime desc
+| project  StartTime, EndTime, EventType, State, EventNarrative  
+
+StormEvents
+| sort by StartTime desc
+| take 5
+| project  StartTime, EndLat, EventType, EventNarrative
+
+// extend compute derived columns
+StormEvents
+| limit 5
+| extend Duration = EndTime - StartTime 
+| project StartTime, EndTime, Duration, EventType, State
+
+print x=1
+| extend x = x + 1, y = x // beware - read one line as one action
+| extend x = x + 1
+
+
+print x=1
+| extend x = x + 1
+| extend y = x 
+| extend x = x + 1
+
+
+// summarize: aggregate groups of rows
+StormEvents
+| summarize event_count = count() by State
+
+StormEvents 
+| summarize StormCount = count(), TypeOfStorms = dcount(EventType) by State
+| top 5 by StormCount desc
+
+// Summarize by scalar values
+StormEvents
+| where StartTime > datetime(2007-02-14) and StartTime < datetime(2007-02-21)
+| summarize event_count = count() by bin(StartTime, 1d)
+
+// Render: display a chart or table
+StormEvents 
+| summarize event_count=count(), mid = avg(BeginLat) by State 
+| sort by mid
+| where event_count > 1800
+| project State, event_count
+| render columnchart
+
+// Timecharts
+StormEvents
+| summarize event_count=count() by bin(StartTime, 1d)
+| render timechart
+
+// Multiple series
+StormEvents 
+| where StartTime > datetime(2007-06-04) and StartTime < datetime(2007-06-10) 
+| where Source in ("Source","Public","Emergency Manager","Trained Spotter","Law Enforcement") //strings in single or double quote
+| summarize count() by bin(StartTime, 10h), Source
+| render timechart
+
+// Daily average cycle
+StormEvents
+| extend hour = floor(StartTime % 1d , 1h)
+| summarize event_count=count() by hour
+| sort by hour asc
+| render timechart
+
+// or | render columnchart instead:
+
+// Compare multiple daily series
+StormEvents
+| extend hour= floor( StartTime % 1d , 1h)
+| where State in ("GULF OF MEXICO","MAINE","VIRGINIA","WISCONSIN","NORTH DAKOTA","NEW JERSEY","OREGON")
+| summarize event_count=count() by hour, State
+| render timechart
+
+StormEvents
+| extend hour= floor( StartTime % 1d , 1h)/ 1h
+| where State in ("GULF OF MEXICO","MAINE","VIRGINIA","WISCONSIN","NORTH DAKOTA","NEW JERSEY","OREGON")
+| summarize event_count=count() by hour, State
+| render columnchart
+
+
+// join ; innerunique (or empty as default) -- Inner join with left side deduplication
+StormEvents
+| where EventType == "Lightning"
+| join (
+    StormEvents 
+    | where EventType == "Avalanche"
+) on State  
+| distinct State
+
+// join [ will not work, no events
+Events
+| where eventName == "session_started"
+| project start_time = timestamp, stop_time, country, session_id
+| join ( Events
+    | where eventName == "session_ended"
+    | project stop_time = timestamp, session_id
+    ) on session_id
+| extend duration = stop_time - start_time
+| project start_time, stop_time, country, duration
+| take 10
+
+// Plot a distribution
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m)
+| sort by duration asc
+| render timechart
+
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m)
+| sort by duration asc
+| render columnchart
+
+// Percentiles
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m), State
+| sort by duration asc
+| summarize percentiles(duration, 5, 20, 50, 80, 95) by State
+
+
+// Assign a result to a variable
+let LightningStorms = 
+    StormEvents
+    | where EventType == "Lightning";
+let AvalancheStorms = 
+    StormEvents
+    | where EventType == "Avalanche";
+LightningStorms 
+| join (AvalancheStorms) on State
+| distinct State
+
+
