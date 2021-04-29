@@ -7,7 +7,7 @@ StormEvents | count
 // where: filtering by a Boolean expression
 StormEvents
 | where StartTime > datetime(2007-02-01) and StartTime < datetime(2007-03-01)
-| where EventType == 'Flood' and State == 'CALIFORNIA'
+| where EventType == 'Flood' and State =~ 'CALIFORNIA'
 | project StartTime, EndTime , State , EventType , EpisodeNarrative
 
 
@@ -108,6 +108,7 @@ StormEvents
     | where EventType == "Avalanche"
 ) on State  
 | distinct State
+
 
 // join [ will not work, no events
 Events
