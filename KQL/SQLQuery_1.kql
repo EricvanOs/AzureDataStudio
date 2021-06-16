@@ -136,8 +136,21 @@ LightningStorms
 
 
 // something else
-print extract("x=([0-9.]+)",1,"hello x=45.6|wo")
+print extract("x=([0-9.]+)",1,"hello x=45.6|wo");
 
-print extract("x=([0-9.]+)",1,"hello y=45.6|wo")
+print extract("x=([0-9.]+)",1,"hello y=45.6|wo");
 
-print extract("x=([0-9.]+)",1,"hello y=45.6|wo x=66.3")
+print extract("x=([0-9.]+)",1,"hello y=45.6|wo x=66.3");
+
+
+let LightningStorms = 
+    StormEvents
+    | where EventType == "Lightning"
+    |project StartTime,State,EventType, Source;
+let AvalancheStorms = 
+    StormEvents
+    | where EventType == "Avalanche"
+    |project StartTime,State,EventType, EpisodeNarrative;
+LightningStorms
+|union
+AvalancheStorms;
