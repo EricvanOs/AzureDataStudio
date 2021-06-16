@@ -1,0 +1,143 @@
+StormEvents | count;
+
+StormEvents
+| where StartTime > datetime(2007-02-01) and StartTime < datetime(2007-03-01)
+| where EventType == 'Flood' and State == 'CALIFORNIA'
+| project StartTime, EndTime , State , EventType , EpisodeNarrative;
+
+StormEvents
+| take 5
+| project  StartTime, EndTime, EventType, State, EventNarrative
+
+StormEvents
+| top 5 by StartTime desc
+| project  StartTime, EndTime, EventType, State, EventNarrative
+
+StormEvents
+| sort by StartTime desc
+| take 5
+| project  StartTime, EndTime, EventType, EventNarrative
+
+
+StormEvents
+| limit 5
+| extend Duration = EndTime - StartTime 
+| project StartTime, EndTime, Duration, EventType, State
+
+StormEvents
+| summarize event_count = count() by State
+
+
+StormEvents 
+| summarize StormCount = count(), TypeOfStorms = dcount(EventType) by State
+| top 5 by StormCount desc
+
+StormEvents
+| where StartTime > datetime(2007-02-14) and StartTime < datetime(2007-02-21)
+| summarize event_count = count() by bin(StartTime, 1d)
+
+StormEvents 
+| summarize event_count=count(), mid = avg(BeginLat) by State 
+| sort by mid
+| where event_count > 1800
+| project State, event_count
+| render columnchart
+
+
+StormEvents
+| summarize event_count=count() by bin(StartTime, 1d)
+| render timechart
+
+StormEvents 
+| where StartTime > datetime(2007-06-04) and StartTime < datetime(2007-06-10) 
+| where Source in ("Source","Public","Emergency Manager","Trained Spotter","Law Enforcement")
+| summarize count() by bin(StartTime, 10h), Source
+
+StormEvents
+| extend hour = floor(StartTime % 1d , 1h)
+| summarize event_count=count() by hour
+| sort by hour asc
+| render timechart
+
+StormEvents
+| extend hour= floor( StartTime % 1d , 1h)
+| where State in ("GULF OF MEXICO","MAINE","VIRGINIA","WISCONSIN","NORTH DAKOTA","NEW JERSEY","OREGON")
+| summarize event_count=count() by hour, State
+| render timechart
+
+StormEvents
+| extend hour= floor( StartTime % 1d , 1h)/ 1h
+| where State in ("GULF OF MEXICO","MAINE","VIRGINIA","WISCONSIN","NORTH DAKOTA","NEW JERSEY","OREGON")
+| summarize event_count=count() by hour, State
+| render columnchart
+
+
+StormEvents
+| where EventType == "Lightning"
+| join (
+    StormEvents 
+    | where EventType == "Avalanche"
+) on State  
+| distinct State
+
+
+Events
+| where eventName == "session_started"
+| project start_time = timestamp, stop_time, country, session_id
+| join ( Events
+    | where eventName == "session_ended"
+    | project stop_time = timestamp, session_id
+    ) on session_id
+| extend duration = stop_time - start_time
+| project start_time, stop_time, country, duration
+| take 10
+
+
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m)
+| sort by duration asc
+| render timechart
+
+
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m)
+| sort by duration asc
+| summarize percentiles(duration, 5, 20, 50, 80, 95)
+
+
+StormEvents
+| extend  duration = EndTime - StartTime
+| where duration > 0s
+| where duration < 3h
+| summarize event_count = count()
+    by bin(duration, 5m), State
+| sort by duration asc
+| summarize percentiles(duration, 5, 20, 50, 80, 95) by State
+
+
+
+let LightningStorms = 
+    StormEvents
+    | where EventType == "Lightning";
+let AvalancheStorms = 
+    StormEvents
+    | where EventType == "Avalanche";
+LightningStorms 
+| join (AvalancheStorms) on State
+| distinct State
+
+
+// something else
+print extract("x=([0-9.]+)",1,"hello x=45.6|wo")
+
+print extract("x=([0-9.]+)",1,"hello y=45.6|wo")
+
+print extract("x=([0-9.]+)",1,"hello y=45.6|wo x=66.3")
