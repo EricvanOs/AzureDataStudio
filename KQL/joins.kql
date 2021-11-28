@@ -1,0 +1,27 @@
+let Table1 = datatable(column1:int, column2:string)
+[
+   1, "A",
+   1, "a2",
+   2, "B",
+   3, "C",
+];
+
+let Table2 = datatable(column1:int, column2:string)
+[
+   1, "X",
+   2, "Y",
+   4, "Z",
+   5, "W"
+];
+
+Table1 | join kind=inner  (Table2) on column1;
+
+//  Table1 | join kind=leftouter  (Table2) on column1;
+
+//  Table1 | join kind=leftsemi  (Table2) on column1;
+
+// Table1 | join kind=leftanti  (Table2) on column1;
+
+// Table1 | join kind=fullouter  (Table2) on column1;
+
+// Table1 | join kind=innerunique   (Table2) on column1;
