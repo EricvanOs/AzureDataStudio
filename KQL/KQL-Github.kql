@@ -3,6 +3,7 @@ GithubEvent
 | summarize  count() by Type
 
 
+
 // looking at events over time
 GithubEvent
 | where CreatedAt between (datetime(2016-02-01) .. datetime(2018-09-01))
