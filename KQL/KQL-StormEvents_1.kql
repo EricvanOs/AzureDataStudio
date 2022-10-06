@@ -1,6 +1,6 @@
 // Kusto is case sensitive !!
 // Count rows:
-StormEvents | count
+StormEvents | count;
 
 
 // project: select a subset of columns
@@ -8,13 +8,13 @@ StormEvents | count
 StormEvents
 | where StartTime > datetime(2007-02-01) and StartTime < datetime(2007-03-01)
 | where EventType == 'Flood' and State =~ 'CALIFORNIA'
-| project StartTime, EndTime , State , EventType , EpisodeNarrative
+| project StartTime, EndTime , State , EventType , EpisodeNarrative;
 
 
 // show me n rows
 StormEvents
 | take 5
-| project  StartTime, EndTime, EventType, State, EventNarrative  
+| project  StartTime, EndTime, EventType, State, EventNarrative;
 
 
 // sort and top
@@ -25,37 +25,37 @@ StormEvents
 StormEvents
 | sort by StartTime desc
 | take 5
-| project  StartTime, EndLat, EventType, EventNarrative
+| project  StartTime, EndLat, EventType, EventNarrative;
 
 // extend compute derived columns
 StormEvents
 | limit 5
 | extend Duration = EndTime - StartTime 
-| project StartTime, EndTime, Duration, EventType, State
+| project StartTime, EndTime, Duration, EventType, State;
 
 print x=1
 | extend x = x + 1, y = x // beware - read one line as one action
-| extend x = x + 1
+| extend x = x + 1;
 
 
 print x=1
 | extend x = x + 1
 | extend y = x 
-| extend x = x + 1
+| extend x = x + 1;
 
 
 // summarize: aggregate groups of rows
 StormEvents
-| summarize event_count = count() by State
+| summarize event_count = count() by State;
 
 StormEvents 
 | summarize StormCount = count(), TypeOfStorms = dcount(EventType) by State
-| top 5 by StormCount desc
+| top 5 by StormCount desc;
 
 // Summarize by scalar values
 StormEvents
 | where StartTime > datetime(2007-02-14) and StartTime < datetime(2007-02-21)
-| summarize event_count = count() by bin(StartTime, 1d)
+| summarize event_count = count() by bin(StartTime, 1d);
 
 // Render: display a chart or table
 StormEvents 
@@ -63,26 +63,26 @@ StormEvents
 | sort by mid
 | where event_count > 1800
 | project State, event_count
-| render columnchart
+| render columnchart;
 
 // Timecharts
 StormEvents
 | summarize event_count=count() by bin(StartTime, 1d)
-| render timechart
+| render timechart;
 
 // Multiple series
 StormEvents 
 | where StartTime > datetime(2007-06-04) and StartTime < datetime(2007-06-10) 
 | where Source in ("Source","Public","Emergency Manager","Trained Spotter","Law Enforcement") //strings in single or double quote
 | summarize count() by bin(StartTime, 10h), Source
-| render timechart
+| render timechart;
 
 // Daily average cycle
 StormEvents
 | extend hour = floor(StartTime % 1d , 1h)
 | summarize event_count=count() by hour
 | sort by hour asc
-| render timechart
+| render timechart;
 
 // or | render columnchart instead:
 
