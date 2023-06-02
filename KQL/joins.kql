@@ -17,4 +17,4 @@ let Table2 = datatable(column1:int, column2:string)
 //Table1 | join kind=leftsemi  (Table2) on column1;
 //Table1 | join kind=leftanti  (Table2) on column1;
 //Table1 | join kind=fullouter  (Table2) on column1;
-//Table1 | join kind=innerunique   (Table2) on column1;
+Table1 | join kind=innerunique   (Table2) on column1;
